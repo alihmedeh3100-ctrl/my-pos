@@ -1,93 +1,44 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>المخزن - إضافة البضاعة</title>
+    <meta charset="UTF-8"><title>المخزن</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Cairo', sans-serif; }</style>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-100 p-6">
-    <div class="max-w-6xl mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">📦 إدارة المخزن</h1>
-            <a href="pos.html" class="bg-blue-600 text-white px-4 py-2 rounded">العودة للبيع 🛒</a>
+<body class="bg-gray-100 font-['Cairo'] p-8">
+    <div class="max-w-6xl mx-auto bg-white p-8 rounded-2xl shadow">
+        <div class="flex justify-between mb-8"><h1 class="text-2xl font-bold">📦 إدخال بضاعة جديدة</h1><a href="pos.html" class="bg-slate-800 text-white px-5 py-2 rounded-xl">رجوع للبيع</a></div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <input id="b" placeholder="الباركود" class="p-3 border rounded-xl">
+            <input id="n" placeholder="اسم القطعة" class="p-3 border rounded-xl">
+            <input id="v" placeholder="المورد" class="p-3 border rounded-xl">
+            <input id="q" type="number" placeholder="الكمية" class="p-3 border rounded-xl">
+            <input id="c" type="number" placeholder="سعر الشراء" class="p-3 border rounded-xl">
+            <input id="r" type="number" placeholder="سعر مبيع فوري" class="p-3 border rounded-xl">
+            <input id="w" type="number" placeholder="سعر مبيع جملة" class="p-3 border rounded-xl text-blue-600">
+            <button onclick="save()" class="bg-blue-600 text-white font-bold rounded-xl">حفظ في المخزن ✅</button>
         </div>
-
-        <div class="bg-white p-6 rounded-xl shadow mb-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <input id="inv-barcode" type="text" placeholder="الباركود" class="p-2 border rounded">
-                <input id="inv-name" type="text" placeholder="اسم القطعة" class="p-2 border rounded">
-                <input id="inv-vendor" type="text" placeholder="المورد" class="p-2 border rounded">
-                <input id="inv-qty" type="number" placeholder="الكمية" class="p-2 border rounded">
-                <input id="inv-cost" type="number" placeholder="سعر الشراء" class="p-2 border rounded">
-                <input id="inv-retail" type="number" placeholder="سعر مفرق" class="p-2 border rounded">
-                <input id="inv-wholesale" type="number" placeholder="سعر جملة" class="p-2 border rounded">
-                <button onclick="saveToInventory()" class="bg-green-600 text-white font-bold rounded">حفظ القطعة ✅</button>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-xl shadow overflow-hidden">
-            <table class="w-full text-right">
-                <thead class="bg-gray-200">
-                    <tr>
-                        <th class="p-3">الباركود</th>
-                        <th class="p-3">اسم القطعة</th>
-                        <th class="p-3">الكمية</th>
-                        <th class="p-3">شراء</th>
-                        <th class="p-3">مفرق</th>
-                        <th class="p-3">حذف</th>
-                    </tr>
-                </thead>
-                <tbody id="inventory-list"></tbody>
-            </table>
-        </div>
+        <table class="w-full text-right border-collapse">
+            <thead class="bg-slate-50 border-b"><tr><th class="p-3">الباركود</th><th class="p-3">اسم القطعة</th><th class="p-3">المورد</th><th class="p-3">الكمية</th><th class="p-3">مبيع</th><th class="p-3">حذف</th></tr></thead>
+            <tbody id="list"></tbody>
+        </table>
     </div>
-
     <script src="auth.js"></script>
     <script>
         checkAuth();
-        let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
-
-        function saveToInventory() {
-            const item = {
-                barcode: document.getElementById('inv-barcode').value.trim(),
-                name: document.getElementById('inv-name').value.trim(),
-                vendor: document.getElementById('inv-vendor').value,
-                qty: parseInt(document.getElementById('inv-qty').value) || 0,
-                cost: parseFloat(document.getElementById('inv-cost').value) || 0,
-                retail: parseFloat(document.getElementById('inv-retail').value) || 0,
-                wholesale: parseFloat(document.getElementById('inv-wholesale').value) || 0
-            };
-
-            if (!item.barcode || !item.name) { alert("أدخل الباركود والاسم!"); return; }
-
-            inventory.push(item);
-            localStorage.setItem('inventory', JSON.stringify(inventory));
-            alert("تم الحفظ!");
-            renderInventory();
-            document.querySelectorAll('input').forEach(i => i.value = "");
+        let inv = JSON.parse(localStorage.getItem('inventory')) || [];
+        function save() {
+            const p = { barcode: document.getElementById('b').value, name: document.getElementById('n').value, vendor: document.getElementById('v').value, qty: parseInt(document.getElementById('q').value), cost: parseFloat(document.getElementById('c').value), retail: parseFloat(document.getElementById('r').value), wholesale: parseFloat(document.getElementById('w').value) };
+            if(!p.barcode || !p.name) return alert("أكمل البيانات!");
+            inv.push(p); localStorage.setItem('inventory', JSON.stringify(inv));
+            alert("تم الحفظ!"); render();
+            document.querySelectorAll('input').forEach(i => i.value = '');
         }
-
-        function renderInventory() {
-            document.getElementById('inventory-list').innerHTML = inventory.map((item, index) => `
-                <tr class="border-b">
-                    <td class="p-3 font-mono">${item.barcode}</td>
-                    <td class="p-3 font-bold">${item.name}</td>
-                    <td class="p-3">${item.qty}</td>
-                    <td class="p-3">${item.cost}$</td>
-                    <td class="p-3 text-green-600 font-bold">${item.retail}$</td>
-                    <td class="p-3"><button onclick="deleteItem(${index})" class="text-red-500">حذف</button></td>
-                </tr>
-            `).join('');
+        function render() {
+            document.getElementById('list').innerHTML = inv.map((p, i) => <tr class="border-b"><td class="p-3 font-mono">${p.barcode}</td><td class="p-3 font-bold">${p.name}</td><td class="p-3 text-blue-600">${p.qty}</td><td class="p-3 font-bold">${p.retail} $</td><td class="p-3"><button onclick="del(${i})" class="text-red-500">حذف</button></td></tr>).join('');
         }
-
-        function deleteItem(index) {
-            inventory.splice(index, 1);
-            localStorage.setItem('inventory', JSON.stringify(inventory));
-            renderInventory();
-        }
-        renderInventory();
+        function del(i) { inv.splice(i, 1); localStorage.setItem('inventory', JSON.stringify(inv)); render(); }
+        render();
     </script>
 </body>
 </html>
