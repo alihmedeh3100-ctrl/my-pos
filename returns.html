@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>المرتجعات - النظام الذكي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Cairo', sans-serif; background-color: #fff5f5; }</style>
+</head>
+<body class="p-4">
+
+    <div class="max-w-5xl mx-auto">
+        <div class="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border-r-8 border-red-600">
+            <h1 class="text-2xl font-black text-red-700 flex items-center gap-2">🔄 قسم المرتجعات</h1>
+            <a href="pos.html" class="bg-gray-800 text-white px-6 py-2 rounded-xl">الرجوع للبيع</a>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white p-8 rounded-3xl shadow-lg">
+                <h2 class="text-lg font-bold mb-6 text-gray-700">تسجيل قطعة مرتجعة</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-sm text-gray-500">باركود القطعة</label>
+                        <input id="ret-barcode" type="text" class="w-full p-3 border-2 border-red-50 rounded-xl outline-none focus:border-red-500 font-mono" placeholder="امسح الباركود...">
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-500">المبلغ المراد إرجاعه للزبون ($)</label>
+                        <input id="ret-amount" type="number" class="w-full p-3 border-2 border-red-50 rounded-xl outline-none focus:border-red-500 font-bold text-red-600" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="text-sm text-gray-500">سبب الإرجاع</label>
+                        <select id="ret-reason" class="w-full p-3 border-2 border-red-50 rounded-xl outline-none focus:border-red-500">
+                            <option value="damage">مشكلة في البضاعة (عطل/كسر)</option>
+                            <option value="change">تبديل رأي الزبون</option>
+                            <option value="other">سبب آخر</option>
+                        </select>
+                    </div>
+                    <div id="other-reason-box" class="hidden">
+                        <input id="ret-note" type="text" class="w-full p-3 border-2 border-red-50 rounded-xl outline-none" placeholder="اكتب السبب هنا...">
+                    </div>
+                    <button onclick="processReturn()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-2xl shadow-lg transition mt-4">
+                        تأكيد الإرجاع وخصم المبلغ من الصندوق
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-3xl shadow-lg border border-red-50 overflow-hidden">
+                <h2 class="text-lg font-bold mb-4">سجل المرتجعات اليومية</h2>
+                <div class="overflow-y-auto max-h-[400px]">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-red-50">
+                            <tr>
+                                <th class="p-2">الباركود</th>
+                                <th class="p-2">المبلغ</th>
+                                <th class="p-2">السبب</th>
+                            </tr>
+                        </thead>
+                        <tbody id="returns-log" class="divide-y">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        checkAuth();
+
+        // ربط القوائم المنسدلة
+        document.getElementById('ret-reason').addEventListener('change', function() {
+            document.getElementById('other-reason-box').classList.toggle('hidden', this.value !== 'other');
+        });
+      function processReturn() {
+            const barcode = document.getElementById('ret-barcode').value;
+            const amount = parseFloat(document.getElementById('ret-amount').value) || 0;
+            const reason = document.getElementById('ret-reason').value;
+            const note = document.getElementById('ret-note').value;
+
+            if (!barcode || amount <= 0) return alert("الرجاء إدخال الباركود والمبلغ!");
+
+            // 1. تحديث المخزن (زيادة الكمية)
+            let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+            let productIndex = inventory.findIndex(p => p.barcode === barcode);
+            if (productIndex !== -1) {
+                inventory[productIndex].qty += 1;
+                localStorage.setItem('inventory', JSON.stringify(inventory));
+            }
+
+            // 2. تحديث الصندوق (خصم من الكاش)
+            let funds = JSON.parse(localStorage.getItem('funds')) || { cash: 0, wish: 0, plus: 0, mobi: 0 };
+            if (funds.cash < amount) {
+                if (!confirm("رصيد الكاش الحالي أقل من المبلغ، هل تريد المتابعة بخصم المبلغ لي
