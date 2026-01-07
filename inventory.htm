@@ -1,0 +1,33 @@
+function renderInventory() {
+            const tbody = document.getElementById('inventory-list');
+            tbody.innerHTML = inventory.map((item, index) => 
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-3 font-mono">${item.barcode}</td>
+                    <td class="p-3 font-bold">${item.name}</td>
+                    <td class="p-3">${item.vendor}</td>
+                    <td class="p-3">${item.qty}</td>
+                    <td class="p-3">${item.cost}</td>
+                    <td class="p-3 text-green-600">${item.retail}</td>
+                    <td class="p-3 text-blue-600">${item.wholesale}</td>
+                    <td class="p-3"><button onclick="deleteItem(${index})" class="text-red-500">حذف</button></td>
+                </tr>
+            ).join('');
+        }
+
+        function deleteItem(index) {
+            if(confirm("حذف هذه القطعة؟")) {
+                inventory.splice(index, 1);
+                localStorage.setItem('inventory', JSON.stringify(inventory));
+                renderInventory();
+            }
+        }
+
+        function clearInputs() {
+            document.querySelectorAll('input').forEach(i => i.value = "");
+            document.getElementById('inv-barcode').focus();
+        }
+
+        renderInventory();
+    </script>
+</body>
+</html>
