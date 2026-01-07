@@ -1,0 +1,90 @@
+<span id="sub-total" class="font-bold text-lg">0.00</span>
+                    </div>
+                    <div class="flex justify-between mb-4 items-center">
+                        <span class="text-gray-600">الخصم ($):</span>
+                        <input id="discount" type="number" value="0" oninput="updateTotals()" class="w-24 border p-1 rounded text-center text-red-600 font-bold">
+                    </div>
+                    <hr class="my-4">
+                    <div class="flex justify-between items-center text-blue-700">
+                        <span class="text-xl font-bold">المطلوب دفعُه:</span>
+                        <span id="final-total" class="text-4xl font-black">0.00</span>
+                    </div>
+                </div>
+
+                <button onclick="confirmSale()" class="w-full bg-green-600 text-white py-6 rounded-2xl font-bold text-2xl shadow-lg hover:bg-green-700 transition transform active:scale-95 mt-6">
+                    إتمام العملية (تم) ✅
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        // التحقق من الدخول فور فتح الصفحة
+        checkAuth();
+        document.getElementById('user-display').innerText = "المستخدم: " + sessionStorage.getItem("userRole");
+
+        // بيانات وهمية مؤقتة للمخزن لكي تجرب الصفحة
+        let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
+        let cart = [];
+
+        // معالجة الباركود
+        const scanInput = document.getElementById('barcode-scan');
+        scanInput.focus(); // جعل التركيز دائماً على الباركود
+
+        scanInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const code = scanInput.value.trim();
+                const product = inventory.find(p => p.barcode === code);
+                
+                if (product) {
+                    const price = document.getElementById('cust-type').value === 'wholesale' ? product.wholesale : product.retail;
+                    addToCart(product, price);
+                } else {
+                    alert("هذه القطعة غير مسجلة في المخزن!");
+                }
+                scanInput.value = '';
+            }
+        });
+
+        function addToCart(product, price) {
+            cart.push({ ...product, salePrice: price });
+            renderCart();
+        }
+
+        function renderCart() {
+            const tbody = document.getElementById('cart-table');
+            tbody.innerHTML = cart.map((item, index) => 
+                <tr class="border-b text-sm">
+                    <td class="p-3">${item.name}</td>
+                    <td class="p-3">${item.salePrice}</td>
+                    <td class="p-3">1</td>
+                    <td class="p-3 font-bold">${item.salePrice}</td>
+                    <td class="p-3 text-red-500 cursor-pointer" onclick="removeFromCart(${index})">✖</td>
+                </tr>
+            ).join('');
+            updateTotals();
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        function updateTotals() {
+            let subTotal = cart.reduce((sum, item) => sum + item.salePrice, 0);
+            let discountValue = parseFloat(document.getElementById('discount').value) || 0;
+            document.getElementById('sub-total').innerText = subTotal.toFixed(2);
+            document.getElementById('final-total').innerText = (subTotal - discountValue).toFixed(2);
+        }
+
+        function confirmSale() {
+            if (cart.length === 0) return alert("السلة فارغة!");
+            alert("تم حفظ الفاتورة بنجاح!");
+            cart = [];
+            renderCart();
+            document.getElementById('discount').value = 0;
+        }
+    </script>
+</body>
+</html>
