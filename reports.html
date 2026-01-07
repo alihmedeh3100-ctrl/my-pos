@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تقارير الأرباح - النظام الذكي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Cairo', sans-serif; background-color: #f1f5f9; }</style>
+</head>
+<body class="p-4">
+
+    <div class="max-w-6xl mx-auto">
+        <div class="flex justify-between items-center mb-8 bg-white p-6 rounded-2xl shadow-sm border-r-8 border-indigo-600">
+            <h1 class="text-2xl font-black text-indigo-900 flex items-center gap-2">📊 لوحة التحكم والأرباح</h1>
+            <div class="flex gap-2">
+                <button onclick="window.print()" class="bg-blue-100 text-blue-700 px-4 py-2 rounded-xl font-bold">طباعة تقرير 🖨️</button>
+                <a href="pos.html" class="bg-gray-800 text-white px-6 py-2 rounded-xl">الرجوع</a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-2xl shadow-sm">
+                <p class="text-gray-500 text-sm">إجمالي المبيعات (Gross)</p>
+                <p id="total-sales" class="text-3xl font-black text-indigo-600">0.00</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm">
+                <p class="text-gray-500 text-sm">إجمالي المرتجعات</p>
+                <p id="total-returns" class="text-3xl font-black text-red-500">0.00</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-2 border-green-500">
+                <p class="text-gray-500 text-sm font-bold">صافي الربح الحقيقي (Profit)</p>
+                <p id="net-profit" class="text-4xl font-black text-green-600">0.00</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-white p-6 rounded-3xl shadow-sm">
+                <h2 class="text-lg font-bold mb-6 border-b pb-2">🔥 الأكثر مبيعاً (Top 5)</h2>
+                <div id="top-products" class="space-y-4 text-sm">
+                    </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-3xl shadow-sm overflow-hidden text-sm">
+                <h2 class="text-lg font-bold mb-4">📜 سجل العمليات الأخيرة</h2>
+                <div class="overflow-y-auto max-h-[400px]">
+                    <table class="w-full text-right border-collapse">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="p-2 border-b">التاريخ</th>
+                                <th class="p-2 border-b">النوع</th>
+                                <th class="p-2 border-b">المبلغ</th>
+                                <th class="p-2 border-b">الربح</th>
+                            </tr>
+                        </thead>
+                        <tbody id="full-log-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        checkAuth(); // Admin check
+
+        function loadReports() {
+            const sales = JSON.parse(localStorage.getItem('sales')) || [];
+            const returns = JSON.parse(localStorage.getItem('returns_history')) || [];
+            
+            let totalSalesAmount = 0;
+            let totalProfit = 0;
+            let productStats = {};
+
+            // 1. معالجة المبيعات
+            sales.forEach(bill => {
+                totalSalesAmount += bill.total;
+                bill.items.forEach(item => {
+                    // حساب الربح للقطعة: سعر المبيع - سعر التكلفة
+                    const profitPerItem = item.salePrice - (item.cost || 0);
+                    totalProfit += profitPerItem;
+
+                    // إحصائيات الأكثر مبيعاً
+                    productStats[item.name] = (productStats[item.name] || 0) + 1;
+                });
+            });// 2. معالجة المرتجعات (خصمها من الأرباح والمبيعات)
+            let totalReturnsAmount = 0;
+            returns.forEach(ret => {
+                totalReturnsAmount += ret.amount;
+                // هنا نعتبر المرتجع يخصم المبلغ بالكامل من الدخل والربح
+                totalProfit -= ret.amount; 
+            });
+
+            // 3. تحديث الأرقام في الواجهة
+            document.getElementById('total-sales').innerText = totalSalesAmount.toFixed(2) + " $";
+            document.getElementById('total-returns').innerText = totalReturnsAmount.toFixed(2) + " $";
+            document.getElementById('net-profit').innerText = (totalProfit).toFixed(2) + " $";
+
+            // 4. عرض أكثر 5 قطع مبيعاً
+            const top5 = Object.entries(productStats)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            document.getElementById('top-products').innerHTML = top5.map(([name, count]) => 
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl">
+                    <span class="font-bold">${name}</span>
+                    <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-black">${count} قطع</span>
+                </div>
+            ).join('') || "لا توجد بيانات مبيعات بعد";
+
+            // 5. سجل العمليات المختلط
+            const logBody = document.getElementById('full-log-body');
+            let combinedLogs = [];
+            sales.forEach(s => combinedLogs.push({ date: s.date, type: 'بيع', amount: s.total, profit: '---' }));
+            returns.forEach(r => combinedLogs.push({ date: r.date, type: 'مرتجع', amount: -r.amount, profit: '---' }));
+            
+            logBody.innerHTML = combinedLogs.map(l => 
+                <tr class="border-b">
+                    <td class="p-2 text-xs">${new Date(l.date).toLocaleString('ar-EG')}</td>
+                    <td class="p-2 font-bold ${l.type === 'بيع' ? 'text-blue-600' : 'text-red-600'}">${l.type}</td>
+                    <td class="p-2 font-bold">${l.amount.toFixed(2)}</td>
+                    <td class="p-2 text-gray-400">---</td>
+                </tr>
+            ).join('');
+        }
+
+        loadReports();
+    </script>
+</body>
+</html>
+          
