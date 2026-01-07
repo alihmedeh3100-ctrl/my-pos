@@ -1,0 +1,30 @@
+function renderCustomers() {
+            const tbody = document.getElementById('customers-list');
+            document.getElementById('cust-count').innerText = ${customers.length} عملاء;
+            
+            tbody.innerHTML = customers.map((c, index) => 
+                <tr class="hover:bg-blue-50 transition">
+                    <td class="p-4 font-bold text-gray-800">${c.name}</td>
+                    <td class="p-4 text-gray-600">${c.phone || '---'}</td>
+                    <td class="p-4 text-xs text-gray-400">${c.date}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="deleteCust(${index})" class="text-red-400 hover:text-red-600 transition">
+                            🗑️
+                        </button>
+                    </td>
+                </tr>
+            ).join('');
+        }
+
+        function deleteCust(index) {
+            if(confirm("هل تريد حذف هذا العميل من القائمة؟")) {
+                customers.splice(index, 1);
+                localStorage.setItem('customers', JSON.stringify(customers));
+                renderCustomers();
+            }
+        }
+
+        renderCustomers();
+    </script>
+</body>
+</html>
