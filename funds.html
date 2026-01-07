@@ -1,43 +1,54 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>الصندوق</title>
+    <meta charset="UTF-8"><title>الصندوق</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Cairo', sans-serif; }</style>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-100 p-6 text-right">
-    <div class="max-w-4xl mx-auto">
-        <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold">💰 رصيد الصناديق</h1>
-            <a href="pos.html" class="bg-gray-800 text-white px-4 py-2 rounded">رجوع</a>
+<body class="bg-gray-50 font-['Cairo'] p-8 text-right">
+    <div class="max-w-5xl mx-auto">
+        <div class="flex justify-between items-center mb-8"><h1 class="text-3xl font-bold">💰 إدارة الأموال</h1><a href="pos.html" class="bg-slate-800 text-white px-6 py-2 rounded-xl">رجوع</a></div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-r-8 border-green-500 text-center"><p>Cash</p><p id="cash" class="text-2xl font-black">0</p></div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-r-8 border-orange-500 text-center"><p>Wish</p><p id="wish" class="text-2xl font-black">0</p></div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-r-8 border-blue-500 text-center"><p>Plus</p><p id="plus" class="text-2xl font-black">0</p></div>
+            <div class="bg-white p-6 rounded-2xl shadow-sm border-r-8 border-red-500 text-center"><p>Mobitek</p><p id="mobi" class="text-2xl font-black">0</p></div>
         </div>
-        
-        <div class="grid grid-cols-2 gap-4">
-            <div class="bg-white p-6 rounded shadow border-r-8 border-green-500">
-                <p>Cash</p><p id="box-cash" class="text-2xl font-bold">0</p>
-            </div>
-            <div class="bg-white p-6 rounded shadow border-r-8 border-orange-500">
-                <p>Wish</p><p id="box-wish" class="text-2xl font-bold">0</p>
-            </div>
-            <div class="bg-white p-6 rounded shadow border-r-8 border-blue-500">
-                <p>Cash Plus</p><p id="box-plus" class="text-2xl font-bold">0</p>
-            </div>
-            <div class="bg-white p-6 rounded shadow border-r-8 border-red-500">
-                <p>Mobitek</p><p id="box-mobi" class="text-2xl font-bold">0</p>
+        <div class="bg-white p-8 rounded-2xl shadow-sm">
+            <h2 class="font-bold mb-4 italic text-blue-800">عملية على الصندوق (زيادة، انقاص، تحويل):</h2>
+            <div class="flex flex-wrap gap-4">
+                <select id="op" class="p-3 border rounded-xl" onchange="toggleDest()">
+                    <option value="dep">زيادة (+) </option><option value="with">انقاص (-) </option><option value="trans">تحويل من (->)</option>
+                </select>
+                <select id="src" class="p-3 border rounded-xl">
+                    <option value="cash">Cash</option><option value="wish">Wish</option><option value="plus">Plus</option><option value="mobi">Mobitek</option>
+                </select>
+                <select id="dest" class="p-3 border border-blue-400 bg-blue-50 rounded-xl hidden">
+                    <option value="cash">إلى Cash</option><option value="wish">إلى Wish</option><option value="plus">إلى Plus</option><option value="mobi">إلى Mobitek</option>
+                </select>
+                <input id="amt" type="number" placeholder="المبلغ" class="p-3 border rounded-xl w-32 font-bold">
+                <button onclick="proc()" class="bg-blue-600 text-white px-8 rounded-xl font-bold">تنفيذ</button>
             </div>
         </div>
     </div>
-
     <script src="auth.js"></script>
     <script>
         checkAuth();
-        let funds = JSON.parse(localStorage.getItem('funds')) || { cash: 0, wish: 0, plus: 0, mobi: 0 };
-        document.getElementById('box-cash').innerText = funds.cash + " $";
-        document.getElementById('box-wish').innerText = funds.wish + " $";
-        document.getElementById('box-plus').innerText = funds.plus + " $";
-        document.getElementById('box-mobi').innerText = funds.mobi + " $";
+        let f = JSON.parse(localStorage.getItem('funds')) || {cash:0, wish:0, plus:0, mobi:0};
+        function toggleDest() { document.getElementById('dest').classList.toggle('hidden', document.getElementById('op').value !== 'trans'); }
+        function show() { document.getElementById('cash').innerText = f.cash.toFixed(2); document.getElementById('wish').innerText = f.wish.toFixed(2); document.getElementById('plus').innerText = f.plus.toFixed(2); document.getElementById('mobi').innerText = f.mobi.toFixed(2); }
+        function proc() {
+            const op = document.getElementById('op').value;
+            const src = document.getElementById('src').value;
+            const dest = document.getElementById('dest').value;
+            const a = parseFloat(document.getElementById('amt').value) || 0;
+            if(op === 'dep') f[src] += a;
+            if(op === 'with') f[src] -= a;
+            if(op === 'trans') { f[src] -= a; f[dest] += a; }
+            localStorage.setItem('funds', JSON.stringify(f));
+            show(); alert("تم تحديث الصناديق");
+        }
+        show();
     </script>
 </body>
 </html>
