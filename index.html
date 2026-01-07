@@ -1,25 +1,17 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>تسجيل الدخول - نظام المحاسبة</title>
+    <meta charset="UTF-8"><title>دخول النظام</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-900 flex items-center justify-center h-screen">
-    <div class="bg-white p-8 rounded-lg shadow-xl w-96 text-center">
-        <h2 class="text-2xl font-bold mb-6">الدخول للنظام</h2>
-        <input id="username" type="text" placeholder="اسم المستخدم" class="w-full p-2 mb-4 border rounded">
-        <input id="password" type="password" placeholder="كلمة المرور" class="w-full p-2 mb-4 border rounded">
-        <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">دخول</button>
+<body class="bg-slate-900 flex items-center justify-center h-screen font-['Cairo']">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 text-center">
+        <h1 class="text-2xl font-bold mb-6 text-slate-800">نظام المحاسبة الذكي</h1>
+        <input id="pass" type="password" placeholder="كلمة مرور الأدمن" class="w-full p-3 mb-4 border rounded-xl text-center">
+        <button onclick="login(document.getElementById('pass').value)" class="w-full bg-blue-600 text-white py-3 rounded-xl font-bold mb-3">دخول الأدمن</button>
+        <button onclick="guestLogin()" class="w-full bg-slate-200 text-slate-700 py-2 rounded-xl text-sm">دخول سريع (Guest)</button>
     </div>
-
     <script src="auth.js"></script>
-    <script>
-        function handleLogin() {
-            const user = document.getElementById('username').value;
-            const pass = document.getElementById('password').value;
-            login(user, pass); // هذه الدالة موجودة داخل auth.js
-        }
-    </script>
 </body>
 </html>
