@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -8,36 +9,25 @@
     <style>body { font-family: 'Cairo', sans-serif; }</style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <script>
-        (function() {
-            const role = sessionStorage.getItem("role");
-            if (!role) { window.location.href = "index.html"; }
-        })();
-        
-        function logout() {
-            sessionStorage.clear();
-            window.location.href = "index.html";
-        }
-    </script>
 
     <header class="bg-blue-700 text-white p-4 flex justify-between shadow-lg mb-6">
         <h1 class="text-xl font-bold">🛒 كاشير المحل</h1>
-        <div class="flex gap-4 text-sm">
-            <a href="inventory.html" class="bg-blue-900 px-3 py-1 rounded">📦 المخزن</a>
-            <a href="funds.html" class="bg-blue-900 px-3 py-1 rounded">💰 الصندوق</a>
-            <button onclick="logout()" class="bg-red-500 px-3 py-1 rounded">خروج</button>
+        <div class="flex gap-4 text-sm font-bold">
+            <a href="inventory.html" class="bg-blue-900 px-3 py-1 rounded hover:bg-blue-800">📦 المخزن</a>
+            <a href="funds.html" class="bg-blue-900 px-3 py-1 rounded hover:bg-blue-800">💰 الصندوق</a>
+            <button onclick="handleLogout()" class="bg-red-500 px-3 py-1 rounded hover:bg-red-600">خروج</button>
         </div>
     </header>
 
     <main class="max-w-6xl mx-auto p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
             <div class="flex gap-4 mb-6">
-                <select id="sale-type" class="border p-3 rounded-xl font-bold bg-gray-50">
+                <select id="sale-type" class="border p-3 rounded-xl font-bold bg-gray-50 outline-none">
                     <option value="retail">مبيع مفرق</option>
                     <option value="wholesale">مبيع جملة</option>
                 </select>
-                <input id="barcode-input" type="text" placeholder="امسح الباركود هنا..." 
-                    class="flex-1 border-2 border-blue-500 p-3 rounded-xl outline-none shadow-sm focus:ring-4 focus:ring-blue-100 transition">
+                <input id="barcode-input" type="text" placeholder="امسح الباركود واضغط Enter" 
+                    class="flex-1 border-2 border-blue-500 p-3 rounded-xl outline-none shadow-sm focus:ring-4 focus:ring-blue-100">
             </div>
 
             <table class="w-full text-right">
@@ -48,14 +38,15 @@
                         <th class="p-3 text-center">حذف</th>
                     </tr>
                 </thead>
-                <tbody id="cart-list" class="divide-y"></tbody>
+                <tbody id="cart-list" class="divide-y">
+                    </tbody>
             </table>
         </div>
 
-        <div class="bg-white p-6 rounded-2xl shadow-lg border-t-8 border-green-500 flex flex-col justify-between">
+        <div class="bg-white p-6 rounded-2xl shadow-lg border-t-8 border-green-500 flex flex-col justify-between h-fit">
             <div>
                 <h2 class="text-xl font-bold mb-4 text-slate-800">الدفع النهائي</h2>
-                <label class="text-xs text-gray-400">اختر طريقة استلام المال:</label>
+                <label class="text-xs text-gray-400">طريقة استلام المال:</label>
                 <select id="fund-select" class="w-full border p-4 rounded-xl font-bold text-green-700 bg-green-50 mb-6 outline-none">
                     <option value="cash">نقدي (Cash)</option>
                     <option value="wish">Wish Money</option>
@@ -66,7 +57,7 @@
                 <div class="border-t pt-4 space-y-2">
                     <div class="flex justify-between text-gray-500">
                         <span>العدد:</span>
-                        <span id="items-count">0</span>
+                        <span id="items-count" class="font-bold">0</span>
                     </div>
                     <div class="flex justify-between text-3xl font-black text-blue-800">
                         <span>الإجمالي:</span>
@@ -75,14 +66,21 @@
                 </div>
             </div>
 
-            <button onclick="completeSale()" class="w-full bg-green-600 text-white py-5 rounded-2xl font-bold text-xl mt-8 shadow-xl hover:bg-green-700 active:scale-95 transition">
+            <button onclick="handleCompleteSale()" class="w-full bg-green-600 text-white py-5 rounded-2xl font-bold text-xl mt-8 shadow-xl hover:bg-green-700 active:scale-95 transition">
                 إتمام البيع (تم) ✅
             </button>
         </div>
     </main>
 
     <script>
+        // التحقق من الدخول فوراً
+        (function() {
+            const role = sessionStorage.getItem("role");
+            if (!role) { window.location.href = "index.html"; }
+        })();
+
         let currentCart = [];
+        // معالجة البحث عند مسح الباركود
         document.getElementById('barcode-input').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 const scannedValue = this.value.trim();
@@ -90,26 +88,30 @@
                 const foundProduct = inventoryData.find(p => p.barcode === scannedValue);
 
                 if (foundProduct) {
-                    const type = document.getElementById('sale-type').value;
-                    const price = (type === 'wholesale') ? (parseFloat(foundProduct.wholesale)  0) : (parseFloat(foundProduct.retail)  0);
+                    const saleType = document.getElementById('sale-type').value;
+                    const price = (saleType === 'wholesale') ? (Number(foundProduct.wholesale)  0) : (Number(foundProduct.retail)  0);
                     
-                    currentCart.push({ ...foundProduct, salePrice: price });
-                    updateCartUI();
+                    currentCart.push({ 
+                        barcode: foundProduct.barcode, 
+                        name: foundProduct.name, 
+                        salePrice: price 
+                    });
+                    renderCartUI();
                 } else {
-                    alert("⚠️ هذا الباركود غير موجود في المخزن! تأكد من إضافته أولاً.");
+                    alert("⚠️ هذا الباركود غير موجود في المخزن!");
                 }
                 this.value = '';
             }
         });
 
-        function updateCartUI() {
+        function renderCartUI() {
             const list = document.getElementById('cart-list');
             list.innerHTML = currentCart.map((item, index) => 
                 <tr class="hover:bg-gray-50">
                     <td class="p-3 font-bold text-slate-700">${item.name}</td>
-                    <td class="p-3 text-center text-blue-600 font-bold">${parseFloat(item.salePrice).toFixed(2)} $</td>
+                    <td class="p-3 text-center text-blue-600 font-bold">${item.salePrice.toFixed(2)} $</td>
                     <td class="p-3 text-center">
-                        <button onclick="removeFromCart(${index})" class="text-red-400 font-bold">✖</button>
+                        <button onclick="handleRemoveItem(${index})" class="text-red-400 font-bold">✖</button>
                     </td>
                 </tr>
             ).join('');
@@ -119,31 +121,40 @@
             document.getElementById('items-count').innerText = currentCart.length;
         }
 
-        function removeFromCart(index) {
+        function handleRemoveItem(index) {
             currentCart.splice(index, 1);
-            updateCartUI();
+            renderCartUI();
         }
 
-        function completeSale() {
+        function handleCompleteSale() {
             if (currentCart.length === 0) return alert("السلة فارغة!");
 
             const totalAmount = currentCart.reduce((sum, item) => sum + item.salePrice, 0);
             const fundType = document.getElementById('fund-select').value;
 
+            // تحديث الصناديق
             let funds = JSON.parse(localStorage.getItem('funds')) || { cash: 0, wish: 0, plus: 0, mobi: 0 };
-            funds[fundType] += totalAmount;
+            funds[fundType] = (Number(funds[fundType]) || 0) + totalAmount;
             localStorage.setItem('funds', JSON.stringify(funds));
 
+            // تحديث المخزن (خصم قطعة)
             let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
             currentCart.forEach(item => {
                 let p = inventory.find(inv => inv.barcode === item.barcode);
-                if (p && p.qty > 0) p.qty -= 1;
+                if (p && Number(p.qty) > 0) {
+                    p.qty = Number(p.qty) - 1;
+                }
             });
             localStorage.setItem('inventory', JSON.stringify(inventory));
 
             alert("✅ تم حفظ العملية بنجاح!");
             currentCart = [];
-            updateCartUI();
+            renderCartUI();
+        }
+
+        function handleLogout() {
+            sessionStorage.clear();
+            window.location.href = "index.html";
         }
     </script>
 </body>
