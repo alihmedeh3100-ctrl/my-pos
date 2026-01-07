@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>تسجيل الدخول - نظام المحاسبة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 flex items-center justify-center h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-xl w-96 text-center">
+        <h2 class="text-2xl font-bold mb-6">الدخول للنظام</h2>
+        <input id="username" type="text" placeholder="اسم المستخدم" class="w-full p-2 mb-4 border rounded">
+        <input id="password" type="password" placeholder="كلمة المرور" class="w-full p-2 mb-4 border rounded">
+        <button onclick="handleLogin()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">دخول</button>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        function handleLogin() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            login(user, pass); // هذه الدالة موجودة داخل auth.js
+        }
+    </script>
+</body>
+</html>
