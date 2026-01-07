@@ -1,103 +1,101 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <title>نقطة البيع - POS</title>
+    <meta charset="UTF-8"><title>نقطة البيع</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Cairo', sans-serif; }</style>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <header class="bg-blue-700 text-white p-4 flex justify-between shadow-lg">
-        <h1 class="text-xl font-bold">كاشير المحل 🛒</h1>
-        <div class="flex gap-4">
-            <a href="inventory.html" class="bg-blue-900 px-3 py-1 rounded text-sm">المخزن</a>
-            <a href="funds.html" class="bg-blue-900 px-3 py-1 rounded text-sm">الصندوق</a>
-            <button onclick="logout()" class="bg-red-500 px-3 py-1 rounded text-sm">خروج</button>
-        </div>
-    </header>
+<body class="bg-gray-50 font-['Cairo'] flex min-h-screen">
+    <aside class="w-64 bg-slate-800 text-white p-5 flex flex-col gap-4">
+        <h2 class="font-bold border-b border-slate-700 pb-3">القائمة الرئيسية</h2>
+        <a href="pos.html" class="p-3 bg-blue-600 rounded-lg">🛒 البيع</a>
+        <a href="inventory.html" class="p-3 hover:bg-slate-700 rounded-lg">📦 المخزن</a>
+        <a href="funds.html" class="p-3 hover:bg-slate-700 rounded-lg">💰 الصندوق</a>
+        <a href="returns.html" class="p-3 hover:bg-slate-700 rounded-lg">🔄 المرتجع</a>
+        <a href="reports.html" class="p-3 hover:bg-slate-700 rounded-lg">📊 التقارير</a>
+        <button onclick="logout()" class="mt-auto p-3 text-red-400">🚪 خروج</button>
+    </aside>
 
-    <main class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow">
+    <main class="flex-1 p-8 grid grid-cols-3 gap-6">
+        <div class="col-span-2 bg-white p-6 rounded-2xl shadow-sm">
             <div class="flex gap-4 mb-6">
-                <select id="cust-type" class="border p-2 rounded">
-                    <option value="retail">مفرق</option>
-                    <option value="wholesale">جملة</option>
+                <select id="cust-type" class="p-3 border rounded-xl font-bold">
+                    <option value="retail">زبون فوري</option>
+                    <option value="wholesale">زبون جملة</option>
                 </select>
-                <input id="barcode-scan" type="text" placeholder="امسح الباركود واضغط Enter" class="flex-1 border-2 border-blue-500 p-2 rounded outline-none">
+                <input id="scan" type="text" placeholder="امسح الباركود..." class="flex-1 p-3 border-2 border-blue-500 rounded-xl outline-none shadow-sm">
             </div>
             <table class="w-full text-right">
-                <thead><tr class="bg-gray-100"><th class="p-2">القطعة</th><th class="p-2">السعر</th><th class="p-2">إجمالي</th></tr></thead>
-                <tbody id="cart-table"></tbody>
+                <thead class="bg-gray-100"><tr class="border-b"><th class="p-3">القطعة</th><th class="p-3">السعر</th><th class="p-3">إجمالي</th></tr></thead>
+                <tbody id="cart"></tbody>
             </table>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow">
-            <h2 class="text-xl font-bold mb-4">الدفع</h2>
-            <label class="text-sm">طريقة الدفع:</label>
-            <select id="payment-method" class="w-full border p-3 rounded mb-4 font-bold text-green-700">
-                <option value="cash">كاش (Cash)</option>
-                <option value="wish">Wish Money</option>
-                <option value="plus">Cash Plus</option>
-                <option value="mobi">Mobitek</option>
-            </select>
-            <div class="flex justify-between text-2xl font-black mb-6">
-                <span>المجموع:</span>
-                <span id="final-total">0.00</span>
+        <div class="bg-white p-6 rounded-2xl shadow-sm flex flex-col justify-between h-fit">
+            <h2 class="text-xl font-bold mb-4">إتمام الفاتورة</h2>
+            <div class="space-y-4">
+                <label class="text-sm text-gray-500">طريقة الدفع (الصندوق):</label>
+                <select id="fund-method" class="w-full p-3 border-2 border-green-500 rounded-xl font-bold text-green-700">
+                    <option value="cash">Cash</option><option value="wish">Wish Money</option><option value="plus">Cash Plus</option><option value="mobi">Mobitek</option>
+                </select>
+                <div class="flex justify-between font-bold"><span>المجموع:</span><span id="total-val">0.00</span></div>
+                <div><label class="text-sm text-gray-500">خصم مبلغ:</label><input id="disc" type="number" value="0" oninput="calc()" class="w-full p-2 border rounded-xl text-red-600 font-bold"></div>
+                <div class="text-3xl font-black text-blue-600 pt-4 border-t text-center" id="final-val">0.00 $</div>
             </div>
-            <button onclick="confirmSale()" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-xl">إتمام العملية (تم) ✅</button>
+            <button onclick="done()" class="w-full bg-green-600 text-white py-5 rounded-2xl font-bold text-xl mt-6">تم (حفظ العملية) ✅</button>
         </div>
     </main>
 
     <script src="auth.js"></script>
     <script>
         checkAuth();
-        let cart = [];
-
-        document.getElementById('barcode-scan').addEventListener('keypress', (e) => {
+        let items = [];
+        document.getElementById('scan').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
-                const inventory = JSON.parse(localStorage.getItem('inventory')) || [];
-                const product = inventory.find(p => p.barcode === e.target.value.trim());
-                if (product) {
-                    const price = document.getElementById('cust-type').value === 'wholesale' ? product.wholesale : product.retail;
-                    cart.push({ ...product, salePrice: price });
-                    renderCart();
-                } else { alert("غير موجود!"); }
+                const inv = JSON.parse(localStorage.getItem('inventory')) || [];
+                const p = inv.find(x => x.barcode === e.target.value.trim());
+                if (p) {
+                    const price = document.getElementById('cust-type').value === 'wholesale' ? p.wholesale : p.retail;
+                    items.push({ ...p, salePrice: price });
+                    render();
+                } else alert("القطعة غير موجودة!");
                 e.target.value = '';
             }
         });
 
-        function renderCart() {
-            document.getElementById('cart-table').innerHTML = cart.map(item => 
-                <tr class="border-b">
-                    <td class="p-2">${item.name}</td>
-                    <td class="p-2">${item.salePrice}</td>
-                    <td class="p-2 font-bold">${item.salePrice}</td>
-                </tr>
-            ).join('');
-            let total = cart.reduce((sum, item) => sum + item.salePrice, 0);
-            document.getElementById('final-total').innerText = total.toFixed(2);
+        function render() {
+            document.getElementById('cart').innerHTML = items.map(i => <tr class="border-b"><td class="p-3">${i.name}</td><td class="p-3">${i.salePrice}</td><td class="p-3 font-bold">${i.salePrice}</td></tr>).join('');
+            calc();
         }
-        function confirmSale() {
-            if (cart.length === 0) return;
-            const total = parseFloat(document.getElementById('final-total').innerText);
-            const method = document.getElementById('payment-method').value;
+        function calc() {
+            let total = items.reduce((s, i) => s + i.salePrice, 0);
+            let disc = parseFloat(document.getElementById('disc').value) || 0;
+            document.getElementById('total-val').innerText = total.toFixed(2);
+            document.getElementById('final-val').innerText = (total - disc).toFixed(2);
+        }
 
-            // 1. زيادة المال في الصندوق
-            let funds = JSON.parse(localStorage.getItem('funds')) || { cash: 0, wish: 0, plus: 0, mobi: 0 };
-            funds[method] += total;
-            localStorage.setItem('funds', JSON.stringify(funds));
+        function done() {
+            if (!items.length) return;
+            const final = parseFloat(document.getElementById('final-val').innerText);
+            const method = document.getElementById('fund-method').value;
 
-            // 2. إنقاص من المخزن
-            let inventory = JSON.parse(localStorage.getItem('inventory')) || [];
-            cart.forEach(c => {
-                let p = inventory.find(inv => inv.barcode === c.barcode);
-                if (p) p.qty -= 1;
-            });
-            localStorage.setItem('inventory', JSON.stringify(inventory));
+            // تحديث الصناديق
+            let f = JSON.parse(localStorage.getItem('funds')) || {cash:0, wish:0, plus:0, mobi:0};
+            f[method] += final;
+            localStorage.setItem('funds', JSON.stringify(f));
 
-            alert("تم بنجاح!");
-            cart = []; renderCart();
+            // تحديث المخزن
+            let inv = JSON.parse(localStorage.getItem('inventory')) || [];
+            items.forEach(c => { let p = inv.find(x => x.barcode === c.barcode); if(p) p.qty -= 1; });
+            localStorage.setItem('inventory', JSON.stringify(inv));
+
+            // تسجيل للتقارير
+            let s = JSON.parse(localStorage.getItem('sales')) || [];
+            s.push({ date: new Date().toISOString(), total: final, items: items });
+            localStorage.setItem('sales', JSON.stringify(s));
+
+            alert("تمت العملية بنجاح!");
+            items = []; render();
         }
     </script>
 </body>
